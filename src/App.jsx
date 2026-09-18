@@ -63,6 +63,27 @@ function App() {
     }
   };
 
+  // ⚡ CANCEL PAYMENT & RESTORE TO STANDBY
+  const handleCancelPayment = async () => {
+    try {
+      const assetRef = doc(db, 'mobility_fleet', assetId);
+      await updateDoc(assetRef, {
+        status: 'STANDBY',
+        rider: 'None',
+        contact: '',
+        returnDate: '',
+        pendingRevenue: 0
+      });
+      // Reset local state so form clears
+      setCustomerName('');
+      setCustomerContact('');
+      setReturnDate('');
+      setAcceptedTerms(false);
+    } catch (error) {
+      console.error("[CLOUD_FRACTURE] Failed to cancel payment:", error);
+    }
+  };
+
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDateString = tomorrow.toISOString().split('T')[0];
@@ -191,17 +212,26 @@ function App() {
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-8 text-center shadow-[0_0_30px_rgba(245,158,11,0.1)]">
                 <Clock className="text-amber-400 mx-auto mb-4 animate-bounce" size={48} />
                 <h3 className="text-xl font-black text-amber-400 uppercase tracking-widest mb-2">Awaiting Payment</h3>
-                <p className="text-zinc-400 text-sm mb-4">Please transfer <strong className="text-white text-lg">€{assetData.pendingRevenue}</strong> via Revolut to complete your rental.</p>
+                <p className="text-zinc-400 text-sm mb-6">Please transfer <strong className="text-white text-lg">€{assetData.pendingRevenue}</strong> via Revolut to complete your rental.</p>
                 
-                {/* ⚡ DIRECT REVOLUT LINK */}
-                <a 
-                    href={`https://revolut.me/aetheltech/${assetData.pendingRevenue}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-[#0075EB] hover:bg-[#005BBA] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg transition-colors"
-                >
-                    Pay with Revolut <ArrowRight size={16} />
-                </a>
+                {/* ⚡ DIRECT REVOLUT LINK & CANCEL BUTTON */}
+                <div className="flex flex-col gap-3">
+                    <a 
+                        href="https://revolut.me/aetheltech" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex justify-center items-center gap-2 bg-[#0075EB] hover:bg-[#005BBA] text-white px-6 py-3.5 rounded-xl text-[13px] font-black uppercase tracking-widest shadow-lg transition-all"
+                    >
+                        Pay with Revolut <ArrowRight size={16} />
+                    </a>
+                    
+                    <button 
+                        onClick={handleCancelPayment}
+                        className="inline-flex justify-center items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-6 py-3.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                        Cancel Payment
+                    </button>
+                </div>
               </div>
               <div className="text-center">
                   <p className="text-[11px] text-zinc-500 uppercase tracking-widest font-bold">Once paid, T-Force Security will remotely deploy your asset.</p>
